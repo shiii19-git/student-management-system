@@ -1,0 +1,10 @@
+# Compiled output
+sms
+sms.exe
+*.o
+*.out
+
+# Runtime data
+students.txt
+report_*.txt
+class_report.txt
