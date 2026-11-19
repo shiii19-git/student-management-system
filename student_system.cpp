@@ -1,181 +1,154 @@
-#include <algorithm>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <vector>
 using namespace std;
 
-const int N = 5;
-const string SUB[N] = {"Maths", "Physics", "Chemistry", "English", "Computer"};
-
 struct Student {
-    int roll = 0, age = 0;
-    string name, course;
-    double m[N] = {0};
-    bool has = false;  // marks entered?
-    double total() const { double t = 0; for (double x : m) t += x; return t; }
-    double pct() const { return total() / N; }
-    char grade() const {
-        double p = pct();
-        return p >= 90 ? 'A' : p >= 75 ? 'B' : p >= 60 ? 'C' : p >= 50 ? 'D' : p >= 40 ? 'E' : 'F';
-    }
-    bool pass() const { for (double x : m) if (x < 40) return false; return true; }
+    int roll;
+    string name;
+    int age;
+    int marks[3];
+    bool hasMarks;
 };
-vector<Student> db;
 
-void save() {
-    ofstream f("students.txt");
-    for (auto& s : db) {
-        f << s.roll << '|' << s.name << '|' << s.age << '|' << s.course << '|' << s.has;
-        for (double x : s.m) f << ' ' << x;
-        f << '\n';
+Student s[50];                                   // up to 50 students
+int n = 0;                                       // number of students added
+string subjects[3] = {"Maths", "Science", "English"};
+
+int findStudent(int roll) {
+    for (int i = 0; i < n; i++) {
+        if (s[i].roll == roll) return i;
     }
-}
-void load() {
-    ifstream f("students.txt");
-    string l, r, a;
-    while (getline(f, l)) {
-        istringstream in(l);
-        Student s;
-        if (!getline(in, r, '|') || !getline(in, s.name, '|') || !getline(in, a, '|') ||
-            !getline(in, s.course, '|'))
-            continue;
-        s.roll = stoi(r); s.age = stoi(a);
-        in >> s.has;
-        for (double& x : s.m) in >> x;
-        db.push_back(s);
-    }
+    return -1;
 }
 
-
-string ask(const string& p) {
-    string s;
-    do { cout << p; getline(cin, s); } while (s.empty());
-    replace(s.begin(), s.end(), '|', ' ');
-    return s;
-}
-double askNum(const string& p, double lo, double hi) {
-    while (true) {
-        try { double v = stod(ask(p)); if (v >= lo && v <= hi) return v; } catch (...) {}
-        cout << "  Enter a number between " << lo << " and " << hi << "\n";
-    }
-}
-Student* byRoll(int r) { for (auto& s : db) if (s.roll == r) return &s; return nullptr; }
-Student* askStudent() {
-    Student* s = byRoll(askNum("Roll number: ", 1, 999999));
-    if (!s) cout << "  Student not found.\n";
-    return s;
+char getGrade(float p) {
+    if (p >= 90) return 'A';
+    else if (p >= 75) return 'B';
+    else if (p >= 60) return 'C';
+    else if (p >= 40) return 'D';
+    else return 'F';
 }
 
+int total(int i) { return s[i].marks[0] + s[i].marks[1] + s[i].marks[2]; }
+float percentage(int i) { return total(i) / 3.0; }
+
+// ---------- Module 1: Add and update ----------
 void addStudent() {
-    Student s;
-    s.roll = askNum("Roll number: ", 1, 999999);
-    if (byRoll(s.roll)) { cout << "  Roll already exists.\n"; return; }
-    s.name = ask("Name: "); s.age = askNum("Age: ", 5, 100); s.course = ask("Course: ");
-    db.push_back(s); save();
-    cout << "  Student added.\n";
+    if (n == 50) { cout << "Student list is full!\n"; return; }
+    int roll;
+    cout << "Roll number: ";
+    cin >> roll;
+    if (findStudent(roll) != -1) { cout << "Roll number already exists!\n"; return; }
+    s[n].roll = roll;
+    cout << "Name (no spaces): ";
+    cin >> s[n].name;
+    cout << "Age: ";
+    cin >> s[n].age;
+    s[n].hasMarks = false;
+    n++;
+    cout << "Student added.\n";
 }
+
 void updateStudent() {
-    Student* s = askStudent();
-    if (!s) return;
-    int c = askNum("1.Name  2.Age  3.Course : ", 1, 3);
-    if (c == 1) s->name = ask("New name: ");
-    else if (c == 2) s->age = askNum("New age: ", 5, 100);
-    else s->course = ask("New course: ");
-    save(); cout << "  Record updated.\n";
+    int roll;
+    cout << "Roll number to update: ";
+    cin >> roll;
+    int i = findStudent(roll);
+    if (i == -1) { cout << "Student not found!\n"; return; }
+    cout << "New name: ";
+    cin >> s[i].name;
+    cout << "New age: ";
+    cin >> s[i].age;
+    cout << "Record updated.\n";
 }
 
-void showRow(const Student& s) {
-    cout << left << setw(8) << s.roll << setw(20) << s.name << setw(6) << s.age << setw(14)
-         << s.course << (s.has ? "Entered" : "Pending") << "\n";
-}
+// ---------- Module 2: Search and display ----------
 void displayAll() {
-    cout << left << setw(8) << "Roll" << setw(20) << "Name" << setw(6) << "Age" << setw(14)
-         << "Course" << "Marks\n" << string(55, '-') << "\n";
-    for (auto& s : db) showRow(s);
-    if (db.empty()) cout << "  No records.\n";
+    if (n == 0) { cout << "No students yet.\n"; return; }
+    cout << "\nRoll\tName\t\tAge\n";
+    for (int i = 0; i < n; i++) {
+        cout << s[i].roll << "\t" << s[i].name << "\t\t" << s[i].age << "\n";
+    }
 }
+
 void searchStudent() {
-    string key = ask("Enter roll number or name: ");
-    string k = key; transform(k.begin(), k.end(), k.begin(), ::tolower);
-    bool found = false;
-    for (auto& s : db) {
-        string n = s.name; transform(n.begin(), n.end(), n.begin(), ::tolower);
-        if (to_string(s.roll) == key || n.find(k) != string::npos) {
-            if (!found) cout << left << setw(8) << "Roll" << setw(20) << "Name" << setw(6) << "Age"
-                             << setw(14) << "Course" << "Marks\n";
-            showRow(s); found = true;
-        }
-    }
-    if (!found) cout << "  No match.\n";
+    int roll;
+    cout << "Enter roll number: ";
+    cin >> roll;
+    int i = findStudent(roll);
+    if (i == -1) { cout << "Student not found!\n"; return; }
+    cout << "\nRoll: " << s[i].roll << "\nName: " << s[i].name << "\nAge: " << s[i].age << "\n";
+    if (s[i].hasMarks) cout << "Percentage: " << percentage(i) << "%  Grade: " << getGrade(percentage(i)) << "\n";
+    else cout << "Marks: not entered yet\n";
 }
 
+// ---------- Module 3: Enter marks and calculate grade ----------
 void enterMarks() {
-    Student* s = askStudent();
-    if (!s) return;
-    for (int i = 0; i < N; i++) s->m[i] = askNum("  " + SUB[i] + " (0-100): ", 0, 100);
-    s->has = true; save();
-    cout << fixed << setprecision(2) << "  Total: " << s->total() << "/" << N * 100
-         << "  Percentage: " << s->pct() << "%  Grade: " << s->grade() << "\n";
-}
-void gradeSheet() {
-    cout << fixed << setprecision(2) << left << setw(8) << "Roll" << setw(20) << "Name" << setw(10)
-         << "Percent" << "Grade\n" << string(45, '-') << "\n";
-    for (auto& s : db)
-        if (s.has) cout << setw(8) << s.roll << setw(20) << s.name << setw(10) << s.pct() << s.grade() << "\n";
-    cout << "A>=90 B>=75 C>=60 D>=50 E>=40 F<40\n";
+    int roll;
+    cout << "Roll number: ";
+    cin >> roll;
+    int i = findStudent(roll);
+    if (i == -1) { cout << "Student not found!\n"; return; }
+    for (int j = 0; j < 3; j++) {
+        do {
+            cout << subjects[j] << " marks (0-100): ";
+            cin >> s[i].marks[j];
+        } while (s[i].marks[j] < 0 || s[i].marks[j] > 100);
+    }
+    s[i].hasMarks = true;
+    cout << "Total: " << total(i) << "/300  Percentage: " << percentage(i)
+         << "%  Grade: " << getGrade(percentage(i)) << "\n";
 }
 
+// ---------- Module 4: Result reports ----------
 void studentReport() {
-    Student* s = askStudent();
-    if (!s) return;
-    if (!s->has) { cout << "  Marks not entered yet.\n"; return; }
-    cout << fixed << setprecision(2) << "\n===== RESULT REPORT =====\nRoll: " << s->roll
-         << "\nName: " << s->name << "\nCourse: " << s->course << "\n-------------------------\n";
-    for (int i = 0; i < N; i++)
-        cout << left << setw(12) << SUB[i] << setw(8) << s->m[i] << (s->m[i] >= 40 ? "Pass" : "Fail") << "\n";
-    cout << "-------------------------\nTotal: " << s->total() << "/" << N * 100
-         << "\nPercentage: " << s->pct() << "%\nGrade: " << s->grade()
-         << "\nResult: " << (s->pass() ? "PASS" : "FAIL") << "\n=========================\n";
+    int roll;
+    cout << "Roll number: ";
+    cin >> roll;
+    int i = findStudent(roll);
+    if (i == -1) { cout << "Student not found!\n"; return; }
+    if (!s[i].hasMarks) { cout << "Marks not entered yet!\n"; return; }
+    cout << "\n===== RESULT REPORT =====\n";
+    cout << "Roll: " << s[i].roll << "\nName: " << s[i].name << "\n";
+    for (int j = 0; j < 3; j++) cout << subjects[j] << ": " << s[i].marks[j] << "\n";
+    cout << "Total: " << total(i) << "/300\nPercentage: " << percentage(i) << "%\n";
+    cout << "Grade: " << getGrade(percentage(i)) << "\n";
+    if (percentage(i) >= 40) cout << "Result: PASS\n";
+    else cout << "Result: FAIL\n";
 }
+
 void classReport() {
-    vector<Student> r;
-    for (auto& s : db) if (s.has) r.push_back(s);
-    sort(r.begin(), r.end(), [](const Student& a, const Student& b) { return a.pct() > b.pct(); });
-    cout << fixed << setprecision(2) << "\n===== CLASS REPORT =====\n" << left << setw(6) << "Rank"
-         << setw(8) << "Roll" << setw(18) << "Name" << setw(9) << "Percent" << setw(7) << "Grade"
-         << "Result\n";
-    int passed = 0; double sum = 0;
-    for (size_t i = 0; i < r.size(); i++) {
-        cout << setw(6) << i + 1 << setw(8) << r[i].roll << setw(18) << r[i].name << setw(9)
-             << r[i].pct() << setw(7) << r[i].grade() << (r[i].pass() ? "PASS" : "FAIL") << "\n";
-        passed += r[i].pass(); sum += r[i].pct();
+    int pass = 0, fail = 0;
+    cout << "\n===== CLASS REPORT =====\nRoll\tName\tTotal\t%\tGrade\tResult\n";
+    for (int i = 0; i < n; i++) {
+        if (!s[i].hasMarks) continue;
+        cout << s[i].roll << "\t" << s[i].name << "\t" << total(i) << "\t" << percentage(i)
+             << "\t" << getGrade(percentage(i)) << "\t";
+        if (percentage(i) >= 40) { cout << "PASS\n"; pass++; }
+        else { cout << "FAIL\n"; fail++; }
     }
-    if (r.empty()) { cout << "  No marks entered yet.\n"; return; }
-    cout << "Passed: " << passed << "  Failed: " << r.size() - passed << "  Class average: "
-         << sum / r.size() << "%  Topper: " << r[0].name << "\n";
+    cout << "Passed: " << pass << "  Failed: " << fail << "\n";
 }
 
 int main() {
-    load();
-    while (true) {
-        cout << "\n===== STUDENT MANAGEMENT =====\n"
-                " 1. Add student        (Module 1)\n 2. Update student\n"
-                " 3. Display all        (Module 2)\n 4. Search student\n"
-                " 5. Enter marks        (Module 3)\n 6. Grade sheet\n"
-                " 7. Student report     (Module 4)\n 8. Class report\n 0. Exit\n";
-        switch ((int)askNum("Choice: ", 0, 8)) {
+    int choice;
+    do {
+        cout << "\n==== STUDENT MANAGEMENT SYSTEM ====\n";
+        cout << "1. Add student\n2. Update student\n3. Display all students\n4. Search student\n";
+        cout << "5. Enter marks\n6. Student report\n7. Class report\n0. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+        switch (choice) {
             case 1: addStudent(); break;
             case 2: updateStudent(); break;
             case 3: displayAll(); break;
             case 4: searchStudent(); break;
             case 5: enterMarks(); break;
-            case 6: gradeSheet(); break;
-            case 7: studentReport(); break;
-            case 8: classReport(); break;
-            case 0: return 0;
+            case 6: studentReport(); break;
+            case 7: classReport(); break;
+            case 0: cout << "Goodbye!\n"; break;
+            default: cout << "Invalid choice!\n";
         }
-    }
+    } while (choice != 0);
+    return 0;
 }
