@@ -10,8 +10,8 @@ struct Student {
     bool hasMarks;
 };
 
-Student s[50];                                   // up to 50 students
-int n = 0;                                       // number of students added
+Student s[50];                                   
+int n = 0;                                      
 string subjects[3] = {"Maths", "Science", "English"};
 
 int findStudent(int roll) {
@@ -32,7 +32,7 @@ char getGrade(float p) {
 int total(int i) { return s[i].marks[0] + s[i].marks[1] + s[i].marks[2]; }
 float percentage(int i) { return total(i) / 3.0; }
 
-// ---------- Module 1: Add and update ----------
+
 void addStudent() {
     if (n == 50) { cout << "Student list is full!\n"; return; }
     int roll;
@@ -62,7 +62,7 @@ void updateStudent() {
     cout << "Record updated.\n";
 }
 
-// ---------- Module 2: Search and display ----------
+
 void displayAll() {
     if (n == 0) { cout << "No students yet.\n"; return; }
     cout << "\nRoll\tName\t\tAge\n";
@@ -82,7 +82,6 @@ void searchStudent() {
     else cout << "Marks: not entered yet\n";
 }
 
-// ---------- Module 3: Enter marks and calculate grade ----------
 void enterMarks() {
     int roll;
     cout << "Roll number: ";
@@ -100,7 +99,7 @@ void enterMarks() {
          << "%  Grade: " << getGrade(percentage(i)) << "\n";
 }
 
-// ---------- Module 4: Result reports ----------
+
 void studentReport() {
     int roll;
     cout << "Roll number: ";
