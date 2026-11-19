@@ -1,5 +1,3 @@
-// Student Management System (compact) - compile: g++ -std=c++11 student_system.cpp -o sms
-// Module 1: Add/Update  | Module 2: Search/Display | Module 3: Marks & Grades | Module 4: Reports
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
@@ -27,7 +25,6 @@ struct Student {
 };
 vector<Student> db;
 
-// ---------- file storage: roll|name|age|course|has m1 m2 m3 m4 m5 ----------
 void save() {
     ofstream f("students.txt");
     for (auto& s : db) {
@@ -52,7 +49,7 @@ void load() {
     }
 }
 
-// ---------- input helpers ----------
+
 string ask(const string& p) {
     string s;
     do { cout << p; getline(cin, s); } while (s.empty());
@@ -72,7 +69,6 @@ Student* askStudent() {
     return s;
 }
 
-// ---------- Module 1: add and update ----------
 void addStudent() {
     Student s;
     s.roll = askNum("Roll number: ", 1, 999999);
@@ -91,7 +87,6 @@ void updateStudent() {
     save(); cout << "  Record updated.\n";
 }
 
-// ---------- Module 2: display and search ----------
 void showRow(const Student& s) {
     cout << left << setw(8) << s.roll << setw(20) << s.name << setw(6) << s.age << setw(14)
          << s.course << (s.has ? "Entered" : "Pending") << "\n";
@@ -117,7 +112,6 @@ void searchStudent() {
     if (!found) cout << "  No match.\n";
 }
 
-// ---------- Module 3: marks and grades ----------
 void enterMarks() {
     Student* s = askStudent();
     if (!s) return;
@@ -134,7 +128,6 @@ void gradeSheet() {
     cout << "A>=90 B>=75 C>=60 D>=50 E>=40 F<40\n";
 }
 
-// ---------- Module 4: reports ----------
 void studentReport() {
     Student* s = askStudent();
     if (!s) return;
